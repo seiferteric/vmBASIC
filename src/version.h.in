@@ -1,0 +1,3 @@
+// the configured options and settings for vmBASIC
+#define vmBASIC_VERSION_MAJOR @vmBASIC_VERSION_MAJOR@
+#define vmBASIC_VERSION_MINOR @vmBASIC_VERSION_MINOR@
