@@ -14,7 +14,7 @@ target_link_libraries(vmBASIC PUBLIC cpu)
 configure_file(version.h.in version.h)
 
 target_include_directories(vmBASIC PUBLIC
-                           "${PROJECT_BINARY_DIR}/vm"
+                           "${CMAKE_CURRENT_BINARY_DIR}"
                            "cpu"
                            )
 
