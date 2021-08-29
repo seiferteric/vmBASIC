@@ -7,6 +7,7 @@
 static uint8_t  gp_registers[N_REGS];
 static uint16_t IP;
 static uint8_t  SR;
+static uint8_t  SP;
 
 static int  reset_rom(char *);
 static void reset_ram(void);

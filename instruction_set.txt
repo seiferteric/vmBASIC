@@ -1,0 +1,138 @@
+
+16 bit address
+16 PC
+8 bit SR
+
+8bit_op 16bit_arg 16bit_arg
+
+instruction set:
+
+halt      0
+nop       4
+reset     8
+move r, r 12
+move r, i 13
+move a, i 14
+move a, r 15
+
+load r, r 16
+load r, a 17
+
+stor r, r 20
+stor r, i 21
+stor a, i 22
+stor a, r 23
+
+add r, r  24
+add r, i  25
+add a, r  26
+add a, i  27
+
+adc add with carry
+
+sub r, r  28
+sub r, i  29
+sub a, r  30
+sub a, i  31
+
+sbc sub with carry
+
+inc r     32
+inc a     33
+
+dec r     36
+dec a     37
+
+mult r, r 40
+mult r, i 41
+mult a, r 42
+mult a, i 43
+
+div r, r  44
+div r, i  45
+div a, r  46
+div a, i  47
+
+jump r    48
+jump a    49
+jump with conditions...
+
+
+xor r, r  52
+xor r, i  53
+xor a, r  54
+xor a, i  55
+
+and r, r  56
+and r, i  57
+and a, r  58
+and a, i  59
+
+or r, r   60
+or r, i   61
+or a, r   62
+or a, i   63
+
+nor r, r  64
+nor r, i  65
+nor a, r  66
+nor a, i  67
+
+not r     68
+not a     69
+
+nand r, r 72
+nand r, i 73
+nand a, r 74
+nand a, i 75
+
+rshft r, r 76
+rshft r, i 77
+rshft a, r 78
+rshft a, i 79
+
+arshft
+
+lshft r, r 80
+lshft r, i 81
+lshft a, r 82
+lshft a, i 83
+
+alshft
+
+lrot r, r 84
+lrot r, i 85
+lrot a, r 86
+lrot a, i 87
+
+rrot r, r 88
+rrot r, i 89
+rrot a, r 90
+rrot a, i 91
+
+push r    92
+push a    93
+
+pop r     96
+pop a     97
+
+rets      100
+reti      101
+
+int       104
+
+cmp r, r  108
+cmp r, i  109
+cmp a, r  110
+cmp a, i  111
+
+
+
+sleep instruction ? Or syscall?
+set graphics modes etc
+set audio mode
+
+
+op code     | address mode
+------------|-------------
+a b c d e f | g h

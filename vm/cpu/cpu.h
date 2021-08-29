@@ -1,4 +1,5 @@
 #pragma once
+//Need to reduce to accomodate video, audio, hardware etc.
 #define ROM_SIZE 0x8000
 #define RAM_SIZE 0x8000
 #define N_REGS 4
