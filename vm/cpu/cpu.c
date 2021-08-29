@@ -4,24 +4,27 @@
 #include <stdlib.h>
 #include <string.h>
 
-static uint8_t gp_registers[N_REGS];
-static uint8_t IP;
-static uint8_t IR;
-static uint8_t state;
+static uint8_t  gp_registers[N_REGS];
+static uint16_t IP;
+static uint8_t  IR;
+static uint8_t  SR;
 
-static uint8_t ram[RAM_SIZE];
-static uint8_t rom[ROM_SIZE];
-
-const char *INST_T[] = {"halt", "mov", "or"};
-
-static int reset_rom(char *);
+static int  reset_rom(char *);
 static void reset_ram(void);
 static void reset_registers(void);
-static int execute_instruction(void);
-static int reset(char *);
+static int  execute_instruction(void);
+static int  reset(char *);
 static void reset_registers(void);
 static void print_regs();
-static int tick();
+static int  tick();
+
+static union {
+    uint8_t mem[RAM_SIZE + ROM_SIZE];
+    struct {
+        uint8_t ram[RAM_SIZE];
+        uint8_t rom[ROM_SIZE];
+    }ram_rom;
+}mem_map;
 
 int reset(char *rom_file) {
   reset_registers();
@@ -34,52 +37,29 @@ int reset(char *rom_file) {
 }
 
 void reset_registers(void) {
-  IP = 0;
+  IP = RAM_SIZE;
   IR = 0;
-  state = 0;
+  SR = 0;
   memset(gp_registers, 0, sizeof(gp_registers));
 }
-void reset_ram(void) { memset(ram, 0, RAM_SIZE); }
+void reset_ram(void) { memset(mem_map.ram_rom.ram, 0, RAM_SIZE); }
 int reset_rom(char *rom_file) {
   FILE *f = fopen(rom_file, "rb");
   if (f) {
-    size_t b_read = fread(rom, ROM_SIZE, 1, f);
+    size_t b_read = fread(mem_map.ram_rom.rom, ROM_SIZE, 1, f);
     if (b_read > ROM_SIZE)
       return 1;
   } else {
-    memset(rom, 0, ROM_SIZE);
+    memset(mem_map.ram_rom.rom, 0, ROM_SIZE);
     return 1;
   }
   return 0;
 }
 int execute_instruction() {
-  IR = rom[IP];
-  struct Reg_Reg {
-    uint8_t reg1;
-    uint8_t reg2;
-  };
-  struct Reg_Addr {
-    uint8_t reg;
-    uint16_t addr;
-  };
-  struct Addr_Reg {
-    uint16_t addr;
-    uint8_t reg;
-  };
-  struct Reg_Imm {
-    uint8_t reg;
-    uint8_t num;
-  };
-
-  union Args {
-    // uint8_t data[3];
-    struct Reg_Reg reg_reg;
-    struct Addr_Reg addr_reg;
-    struct Reg_Addr reg_addr;
-    struct Reg_Imm reg_imm;
-  };
-
-  union Args *args = (union Args *)&rom[IP + 1];
+  IR = mem_map.mem[IP];
+  
+  union Args *args = (union Args *)&mem_map.mem[IP + 1];
+  
   switch (IR) {
   case 0x00: // halt
     return 0;
@@ -101,7 +81,13 @@ int execute_instruction() {
            (unsigned int)IP);
     break;
   }
-  IP += 4;
+  //Reached end of ROM, lets rest
+  if(IP == 0xFFFF) {
+      reset_ram();
+      reset_registers();
+      return 1;
+  }
+  IP += INST_SZ;
   return 1;
 }
 void print_regs() {
