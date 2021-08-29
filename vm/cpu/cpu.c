@@ -6,7 +6,6 @@
 
 static uint8_t  gp_registers[N_REGS];
 static uint16_t IP;
-static uint8_t  IR;
 static uint8_t  SR;
 
 static int  reset_rom(char *);
@@ -17,6 +16,26 @@ static int  reset(char *);
 static void reset_registers(void);
 static void print_regs();
 static int  tick();
+
+union InstructionArgs{
+    uint8_t data[4];
+    struct {
+        uint8_t reg1;
+        uint8_t reg2;
+    }reg_reg;
+    struct {
+        uint8_t reg;
+        uint16_t addr;
+    }reg_addr;
+    struct {
+        uint16_t addr;
+        uint8_t reg;
+    }addr_reg;
+    struct {
+        uint8_t reg;
+        uint8_t num;
+    }reg_imm;
+};
 
 static union {
     uint8_t mem[RAM_SIZE + ROM_SIZE];
@@ -38,7 +57,6 @@ int reset(char *rom_file) {
 
 void reset_registers(void) {
   IP = RAM_SIZE;
-  IR = 0;
   SR = 0;
   memset(gp_registers, 0, sizeof(gp_registers));
 }
@@ -56,11 +74,11 @@ int reset_rom(char *rom_file) {
   return 0;
 }
 int execute_instruction() {
-  IR = mem_map.mem[IP];
-  
-  union Args *args = (union Args *)&mem_map.mem[IP + 1];
-  
-  switch (IR) {
+ 
+  uint8_t inst = mem_map.mem[IP];
+  union InstructionArgs *args = (union InstructionArgs *)&mem_map.mem[IP+1];
+  //printf("%u %u %u %u %u\n", inst, args->data[0], args->data[1], args->data[2], args->data[3]);
+  switch (inst) {
   case 0x00: // halt
     return 0;
   case 0x01: // mov reg, reg
@@ -77,7 +95,7 @@ int execute_instruction() {
     break;
 
   default:
-    printf("Invalid Instruction: 0x%02x at 0x%02x\n", (unsigned int)IR,
+    printf("Invalid Instruction: 0x%02x at 0x%02x\n", (unsigned int)inst,
            (unsigned int)IP);
     break;
   }
