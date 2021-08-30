@@ -4,10 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-static uint8_t  gp_registers[N_REGS];
-static uint16_t IP;
-static uint8_t  SR;
-static uint8_t  SP;
+static struct {
+    uint16_t IP;                   //Instruction Pointer
+    uint8_t  SR;                   //Status Register
+    uint8_t  SP;                   //Stack Pointer
+    uint8_t  gp_registers[N_REGS]; //General Purpose Registers
+}reg;
+
 
 static int  reset_rom(char *);
 static void reset_ram(void);
@@ -20,9 +23,9 @@ static int  tick();
 
 #pragma pack(1)
 struct Instruction {
-    uint8_t inst;
+    uint8_t op;             //Instruction OP Code
     union {
-        uint8_t data[4];
+        uint8_t data[4];    //Access arguments as raw bytes (dor debugging mainly)
         struct {
             uint8_t reg1;
             uint8_t reg2;
@@ -41,7 +44,6 @@ struct Instruction {
         }reg_imm;
     }args;
 };
-
 
 static union {
     uint8_t mem[RAM_SIZE + ROM_SIZE];
@@ -64,9 +66,10 @@ int reset(char *rom_file) {
 }
 
 void reset_registers(void) {
-  IP = RAM_SIZE;
-  SR = 0;
-  memset(gp_registers, 0, sizeof(gp_registers));
+
+  memset(&reg, 0, sizeof(reg));
+  //Set Instruction Pointer to top of ROM
+  reg.IP = RAM_SIZE;
 }
 void reset_ram(void) { memset(mem_map.ram_rom.ram, 0, RAM_SIZE); }
 int reset_rom(char *rom_file) {
@@ -82,44 +85,44 @@ int reset_rom(char *rom_file) {
   return 0;
 }
 int execute_instruction() {
-  //uint8_t inst = mem_map.mem[IP];
-  struct Instruction *inst = (struct Instruction *)&mem_map.mem[IP];
+  
+  struct Instruction *inst = (struct Instruction *)&mem_map.mem[reg.IP];
   //printf("%u %u %u %u %u\n", inst->inst, inst->args.data[0], inst->args.data[1], inst->args.data[2], inst->args.data[3]);
-  switch (inst->inst) {
+  switch (inst->op) {
   case 0x00: // halt
     return 0;
   case 0x01: // mov reg, reg
-    gp_registers[inst->args.reg_reg.reg1] = gp_registers[inst->args.reg_reg.reg2];
+    reg.gp_registers[inst->args.reg_reg.reg1] = reg.gp_registers[inst->args.reg_reg.reg2];
     break;
   case 0x02: // mov reg, imm
-    gp_registers[inst->args.reg_imm.reg] = inst->args.reg_imm.num;
+    reg.gp_registers[inst->args.reg_imm.reg] = inst->args.reg_imm.num;
     break;
   case 0x03: // add reg, reg
-    gp_registers[inst->args.reg_reg.reg1] += gp_registers[inst->args.reg_reg.reg2];
+    reg.gp_registers[inst->args.reg_reg.reg1] += reg.gp_registers[inst->args.reg_reg.reg2];
     break;
   case 0x04: // add reg, imm
-    gp_registers[inst->args.reg_imm.reg] += inst->args.reg_imm.num;
+    reg.gp_registers[inst->args.reg_imm.reg] += inst->args.reg_imm.num;
     break;
 
   default:
-    printf("Invalid Instruction: 0x%02x at 0x%02x\n", (unsigned int)inst->inst,
-           (unsigned int)IP);
+    printf("Invalid Instruction: 0x%02x at 0x%02x\n", (unsigned int)inst->op,
+           (unsigned int)reg.IP);
     break;
   }
   //Reached end of ROM, lets rest
-  if(IP == 0xFFFF) {
+  if(reg.IP == 0xFFFF) {
       reset_ram();
       reset_registers();
       return 1;
   }
-  IP += INST_SZ;
+  reg.IP += INST_SZ;
   return 1;
 }
 void print_regs() {
   int i = 0;
-  printf("$%02x: ", (unsigned int)IP);
+  printf("$%02x: ", (unsigned int)reg.IP);
   for (; i < N_REGS; i++) {
-    printf("%u ", (unsigned int)gp_registers[i]);
+    printf("%u ", (unsigned int)reg.gp_registers[i]);
   }
   printf("\n");
 }
