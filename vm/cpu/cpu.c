@@ -7,8 +7,8 @@
 static struct {
     uint16_t IP;                   //Instruction Pointer
     uint8_t  SR;                   //Status Register
-    uint8_t  SP;                   //Stack Pointer
-    uint8_t  gp_registers[N_REGS]; //General Purpose Registers
+    uint16_t SP;                   //Stack Pointer
+    uint8_t  gp8_regs[N8_REGS];    //General Purpose 8 bit Registers
 }reg;
 
 
@@ -69,7 +69,7 @@ void reset_registers(void) {
 
   memset(&reg, 0, sizeof(reg));
   //Set Instruction Pointer to top of ROM
-  reg.IP = RAM_SIZE;
+  reg.IP = ROM_START;
 }
 void reset_ram(void) { memset(mem_map.ram_rom.ram, 0, RAM_SIZE); }
 int reset_rom(char *rom_file) {
@@ -92,16 +92,16 @@ int execute_instruction() {
   case 0x00: // halt
     return 0;
   case 0x01: // mov reg, reg
-    reg.gp_registers[inst->args.reg_reg.reg1] = reg.gp_registers[inst->args.reg_reg.reg2];
+    reg.gp8_regs[inst->args.reg_reg.reg1] = reg.gp8_regs[inst->args.reg_reg.reg2];
     break;
   case 0x02: // mov reg, imm
-    reg.gp_registers[inst->args.reg_imm.reg] = inst->args.reg_imm.num;
+    reg.gp8_regs[inst->args.reg_imm.reg] = inst->args.reg_imm.num;
     break;
   case 0x03: // add reg, reg
-    reg.gp_registers[inst->args.reg_reg.reg1] += reg.gp_registers[inst->args.reg_reg.reg2];
+    reg.gp8_regs[inst->args.reg_reg.reg1] += reg.gp8_regs[inst->args.reg_reg.reg2];
     break;
   case 0x04: // add reg, imm
-    reg.gp_registers[inst->args.reg_imm.reg] += inst->args.reg_imm.num;
+    reg.gp8_regs[inst->args.reg_imm.reg] += inst->args.reg_imm.num;
     break;
 
   default:
@@ -121,8 +121,8 @@ int execute_instruction() {
 void print_regs() {
   int i = 0;
   printf("$%02x: ", (unsigned int)reg.IP);
-  for (; i < N_REGS; i++) {
-    printf("%u ", (unsigned int)reg.gp_registers[i]);
+  for (; i < N8_REGS; i++) {
+    printf("%u ", (unsigned int)reg.gp8_regs[i]);
   }
   printf("\n");
 }
